@@ -1,0 +1,80 @@
+--// Wind UI - Blox Fruits (Local)
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
+
+-- GUI
+local gui = Instance.new("ScreenGui", player.PlayerGui)
+gui.Name = "WindUI"
+
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 320, 0, 200)
+main.Position = UDim2.new(0.5, -160, 0.3, 0)
+main.BackgroundColor3 = Color3.fromRGB(15,15,15)
+main.BorderSizePixel = 0
+main.Active = true
+main.Draggable = true
+
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
+
+-- Title
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1,0,0,40)
+title.BackgroundTransparency = 1
+title.Text = "🌪 Wind UI | Blox Fruits"
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+
+-- Function tạo slider
+local function createSlider(text, y, min, max, default, callback)
+	local label = Instance.new("TextLabel", main)
+	label.Position = UDim2.new(0,15,0,y)
+	label.Size = UDim2.new(1,-30,0,20)
+	label.BackgroundTransparency = 1
+	label.Text = text..": "..default
+	label.TextColor3 = Color3.fromRGB(200,200,200)
+	label.Font = Enum.Font.Gotham
+	label.TextSize = 14
+	label.TextXAlignment = Left
+
+	local bar = Instance.new("Frame", main)
+	bar.Position = UDim2.new(0,15,0,y+25)
+	bar.Size = UDim2.new(1,-30,0,6)
+	bar.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	bar.BorderSizePixel = 0
+	Instance.new("UICorner", bar).CornerRadius = UDim.new(1,0)
+
+	local fill = Instance.new("Frame", bar)
+	fill.Size = UDim2.new((default-min)/(max-min),0,1,0)
+	fill.BackgroundColor3 = Color3.fromRGB(120,120,255)
+	fill.BorderSizePixel = 0
+	Instance.new("UICorner", fill).CornerRadius = UDim.new(1,0)
+
+	bar.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			local move; move = UIS.InputChanged:Connect(function(i)
+				if i.UserInputType == Enum.UserInputType.MouseMovement then
+					local scale = math.clamp((i.Position.X - bar.AbsolutePosition.X)/bar.AbsoluteSize.X,0,1)
+					fill.Size = UDim2.new(scale,0,1,0)
+					local value = math.floor(min + (max-min)*scale)
+					label.Text = text..": "..value
+					callback(value)
+				end
+			end)
+			UIS.InputEnded:Wait()
+			move:Disconnect()
+		end
+	end)
+end
+
+-- Sliders
+createSlider("Speed", 50, 16, 200, 16, function(v)
+	humanoid.WalkSpeed = v
+end)
+
+createSlider("Jump", 100, 50, 250, 50, function(v)
+	humanoid.JumpPower = v
+end)
