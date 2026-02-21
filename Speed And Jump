@@ -6,33 +6,33 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local remote = ReplicatedStorage:WaitForChild("SaveJobEvent")
 
-----------------------------------------------------
--- Ẩn tên
-----------------------------------------------------
+--------------------------------------------------
+-- ẨN TÊN
+--------------------------------------------------
 local function hideName(name)
 	local visible = math.max(3, math.floor(#name * 0.5))
-	return string.sub(name,1,visible) .. string.rep("*", #name-visible)
+	return string.sub(name,1,visible)..string.rep("*",#name-visible)
 end
 
-----------------------------------------------------
+--------------------------------------------------
 -- GUI
-----------------------------------------------------
-local gui = Instance.new("ScreenGui", player.PlayerGui)
+--------------------------------------------------
+local gui = Instance.new("ScreenGui")
 gui.ResetOnSpawn = false
+gui.Parent = player.PlayerGui
 
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0,500,0,250)
-main.Position = UDim2.new(0.5,-250,0.3,0)
-main.BackgroundColor3 = Color3.fromRGB(30,30,30)
+main.Size = UDim2.new(0,520,0,300)
+main.Position = UDim2.new(0.5,-260,0.3,0)
+main.BackgroundColor3 = Color3.fromRGB(25,25,25)
 main.Active = true
 main.BorderSizePixel = 0
 
-local corner = Instance.new("UICorner", main)
-corner.CornerRadius = UDim.new(0,15)
+Instance.new("UICorner",main).CornerRadius = UDim.new(0,15)
 
-----------------------------------------------------
--- Kéo mượt
-----------------------------------------------------
+--------------------------------------------------
+-- DRAG MƯỢT
+--------------------------------------------------
 local dragging, dragInput, dragStart, startPos
 
 main.InputBegan:Connect(function(input)
@@ -40,7 +40,6 @@ main.InputBegan:Connect(function(input)
 		dragging = true
 		dragStart = input.Position
 		startPos = main.Position
-		
 		input.Changed:Connect(function()
 			if input.UserInputState == Enum.UserInputState.End then
 				dragging = false
@@ -67,50 +66,50 @@ UserInputService.InputChanged:Connect(function(input)
 	end
 end)
 
-----------------------------------------------------
--- Header
-----------------------------------------------------
+--------------------------------------------------
+-- HEADER
+--------------------------------------------------
 local header = Instance.new("TextLabel", main)
 header.Size = UDim2.new(1,0,0,40)
 header.BackgroundTransparency = 1
-header.Text = "👤 Tên: "..hideName(player.Name)
+header.Text = "👤 "..hideName(player.Name)
 header.TextColor3 = Color3.new(1,1,1)
 header.TextScaled = true
 header.Font = Enum.Font.GothamBold
 
-----------------------------------------------------
--- TAB BUTTONS
-----------------------------------------------------
-local tabs = Instance.new("Frame", main)
-tabs.Size = UDim2.new(1,0,0,40)
-tabs.Position = UDim2.new(0,0,0,40)
-tabs.BackgroundTransparency = 1
+--------------------------------------------------
+-- TABS
+--------------------------------------------------
+local tabFrame = Instance.new("Frame", main)
+tabFrame.Size = UDim2.new(1,0,0,40)
+tabFrame.Position = UDim2.new(0,0,0,40)
+tabFrame.BackgroundTransparency = 1
 
-local function makeTab(text, pos)
-	local btn = Instance.new("TextButton", tabs)
-	btn.Size = UDim2.new(0.33,0,1,0)
-	btn.Position = UDim2.new(pos,0,0,0)
-	btn.Text = text
-	btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-	btn.TextColor3 = Color3.new(1,1,1)
-	btn.Font = Enum.Font.GothamBold
-	btn.TextScaled = true
-	return btn
+local function createTab(text,pos)
+	local b = Instance.new("TextButton",tabFrame)
+	b.Size = UDim2.new(0.33,0,1,0)
+	b.Position = UDim2.new(pos,0,0,0)
+	b.Text = text
+	b.BackgroundColor3 = Color3.fromRGB(45,45,45)
+	b.TextColor3 = Color3.new(1,1,1)
+	b.TextScaled = true
+	b.Font = Enum.Font.GothamBold
+	return b
 end
 
-local noteTab = makeTab("Note",0)
-local statusTab = makeTab("Status",0.33)
-local settingTab = makeTab("Setting",0.66)
+local noteBtn = createTab("Note",0)
+local statusBtn = createTab("Status",0.33)
+local settingBtn = createTab("Setting",0.66)
 
-----------------------------------------------------
--- CONTENT FRAMES
-----------------------------------------------------
+--------------------------------------------------
+-- CONTENT
+--------------------------------------------------
 local content = Instance.new("Frame", main)
 content.Size = UDim2.new(1,0,1,-80)
 content.Position = UDim2.new(0,0,0,80)
 content.BackgroundTransparency = 1
 
-local noteFrame = Instance.new("Frame", content)
+local noteFrame = Instance.new("Frame",content)
 noteFrame.Size = UDim2.new(1,0,1,0)
 noteFrame.BackgroundTransparency = 1
 
@@ -122,15 +121,15 @@ local settingFrame = noteFrame:Clone()
 settingFrame.Parent = content
 settingFrame.Visible = false
 
-----------------------------------------------------
+--------------------------------------------------
 -- NOTE
-----------------------------------------------------
-local jobBox = Instance.new("TextBox", noteFrame)
-jobBox.Size = UDim2.new(0.9,0,0.5,0)
+--------------------------------------------------
+local jobBox = Instance.new("TextBox",noteFrame)
+jobBox.Size = UDim2.new(0.9,0,0.6,0)
 jobBox.Position = UDim2.new(0.05,0,0.2,0)
-jobBox.PlaceholderText = "Ghi đơn vào đây..."
+jobBox.PlaceholderText = "Nhập đơn..."
 jobBox.TextScaled = true
-jobBox.BackgroundColor3 = Color3.fromRGB(45,45,45)
+jobBox.BackgroundColor3 = Color3.fromRGB(40,40,40)
 jobBox.TextColor3 = Color3.new(1,1,1)
 jobBox.ClearTextOnFocus = false
 
@@ -146,54 +145,53 @@ remote.OnClientEvent:Connect(function(data)
 	jobBox.Text = data
 end)
 
-----------------------------------------------------
+--------------------------------------------------
 -- STATUS
-----------------------------------------------------
-local playerCount = Instance.new("TextLabel", statusFrame)
+--------------------------------------------------
+local playerCount = Instance.new("TextLabel",statusFrame)
 playerCount.Size = UDim2.new(1,0,0.5,0)
 playerCount.BackgroundTransparency = 1
 playerCount.TextScaled = true
 playerCount.TextColor3 = Color3.new(1,1,1)
 playerCount.Font = Enum.Font.GothamBold
 
-local function updateCount()
+local function updatePlayers()
 	playerCount.Text = "Players in server: "..#Players:GetPlayers()
 end
+Players.PlayerAdded:Connect(updatePlayers)
+Players.PlayerRemoving:Connect(updatePlayers)
+updatePlayers()
 
-Players.PlayerAdded:Connect(updateCount)
-Players.PlayerRemoving:Connect(updateCount)
-updateCount()
-
-----------------------------------------------------
+--------------------------------------------------
 -- SETTING
-----------------------------------------------------
-local saveToggle = Instance.new("TextButton", settingFrame)
-saveToggle.Size = UDim2.new(0.8,0,0.3,0)
-saveToggle.Position = UDim2.new(0.1,0,0.1,0)
-saveToggle.Text = "Save Text: OFF"
-saveToggle.BackgroundColor3 = Color3.fromRGB(120,0,0)
-saveToggle.TextColor3 = Color3.new(1,1,1)
-saveToggle.Font = Enum.Font.GothamBold
-saveToggle.TextScaled = true
+--------------------------------------------------
+local saveBtn = Instance.new("TextButton",settingFrame)
+saveBtn.Size = UDim2.new(0.8,0,0.25,0)
+saveBtn.Position = UDim2.new(0.1,0,0.1,0)
+saveBtn.Text = "Save Text: OFF"
+saveBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
+saveBtn.TextColor3 = Color3.new(1,1,1)
+saveBtn.TextScaled = true
+saveBtn.Font = Enum.Font.GothamBold
 
-saveToggle.MouseButton1Click:Connect(function()
+saveBtn.MouseButton1Click:Connect(function()
 	saveEnabled = not saveEnabled
 	if saveEnabled then
-		saveToggle.Text = "Save Text: ON"
-		saveToggle.BackgroundColor3 = Color3.fromRGB(0,120,0)
+		saveBtn.Text = "Save Text: ON"
+		saveBtn.BackgroundColor3 = Color3.fromRGB(0,120,0)
 	else
-		saveToggle.Text = "Save Text: OFF"
-		saveToggle.BackgroundColor3 = Color3.fromRGB(120,0,0)
+		saveBtn.Text = "Save Text: OFF"
+		saveBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
 	end
 end)
 
 -- FPS
-local fpsLabel = Instance.new("TextLabel", settingFrame)
+local fpsLabel = Instance.new("TextLabel",settingFrame)
 fpsLabel.Size = UDim2.new(1,0,0.3,0)
 fpsLabel.Position = UDim2.new(0,0,0.5,0)
 fpsLabel.BackgroundTransparency = 1
-fpsLabel.TextColor3 = Color3.new(1,1,1)
 fpsLabel.TextScaled = true
+fpsLabel.TextColor3 = Color3.new(1,1,1)
 fpsLabel.Font = Enum.Font.GothamBold
 
 local fpsOn = false
@@ -213,36 +211,36 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
-local fpsToggle = Instance.new("TextButton", settingFrame)
-fpsToggle.Size = UDim2.new(0.8,0,0.3,0)
-fpsToggle.Position = UDim2.new(0.1,0,0.8,0)
-fpsToggle.Text = "FPS: OFF"
-fpsToggle.BackgroundColor3 = Color3.fromRGB(120,0,0)
-fpsToggle.TextColor3 = Color3.new(1,1,1)
-fpsToggle.Font = Enum.Font.GothamBold
-fpsToggle.TextScaled = true
+local fpsBtn = Instance.new("TextButton",settingFrame)
+fpsBtn.Size = UDim2.new(0.8,0,0.25,0)
+fpsBtn.Position = UDim2.new(0.1,0,0.75,0)
+fpsBtn.Text = "FPS: OFF"
+fpsBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
+fpsBtn.TextColor3 = Color3.new(1,1,1)
+fpsBtn.TextScaled = true
+fpsBtn.Font = Enum.Font.GothamBold
 
-fpsToggle.MouseButton1Click:Connect(function()
+fpsBtn.MouseButton1Click:Connect(function()
 	fpsOn = not fpsOn
 	if fpsOn then
-		fpsToggle.Text = "FPS: ON"
-		fpsToggle.BackgroundColor3 = Color3.fromRGB(0,120,0)
+		fpsBtn.Text = "FPS: ON"
+		fpsBtn.BackgroundColor3 = Color3.fromRGB(0,120,0)
 	else
-		fpsToggle.Text = "FPS: OFF"
-		fpsToggle.BackgroundColor3 = Color3.fromRGB(120,0,0)
+		fpsBtn.Text = "FPS: OFF"
+		fpsBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
 	end
 end)
 
-----------------------------------------------------
+--------------------------------------------------
 -- TAB SWITCH
-----------------------------------------------------
-local function switch(tab)
+--------------------------------------------------
+local function switch(frame)
 	noteFrame.Visible = false
 	statusFrame.Visible = false
 	settingFrame.Visible = false
-	tab.Visible = true
+	frame.Visible = true
 end
 
-noteTab.MouseButton1Click:Connect(function() switch(noteFrame) end)
-statusTab.MouseButton1Click:Connect(function() switch(statusFrame) end)
-settingTab.MouseButton1Click:Connect(function() switch(settingFrame) end)
+noteBtn.MouseButton1Click:Connect(function() switch(noteFrame) end)
+statusBtn.MouseButton1Click:Connect(function() switch(statusFrame) end)
+settingBtn.MouseButton1Click:Connect(function() switch(settingFrame) end)
