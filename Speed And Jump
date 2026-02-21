@@ -1,80 +1,248 @@
---// Wind UI - Blox Fruits (Local)
 local Players = game:GetService("Players")
-local UIS = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
 local player = Players.LocalPlayer
-local char = player.Character or player.CharacterAdded:Wait()
-local humanoid = char:WaitForChild("Humanoid")
+local remote = ReplicatedStorage:WaitForChild("SaveJobEvent")
 
--- GUI
-local gui = Instance.new("ScreenGui", player.PlayerGui)
-gui.Name = "WindUI"
-
-local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 320, 0, 200)
-main.Position = UDim2.new(0.5, -160, 0.3, 0)
-main.BackgroundColor3 = Color3.fromRGB(15,15,15)
-main.BorderSizePixel = 0
-main.Active = true
-main.Draggable = true
-
-Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
-
--- Title
-local title = Instance.new("TextLabel", main)
-title.Size = UDim2.new(1,0,0,40)
-title.BackgroundTransparency = 1
-title.Text = "🌪 Wind UI | Blox Fruits"
-title.TextColor3 = Color3.fromRGB(255,255,255)
-title.Font = Enum.Font.GothamBold
-title.TextSize = 18
-
--- Function tạo slider
-local function createSlider(text, y, min, max, default, callback)
-	local label = Instance.new("TextLabel", main)
-	label.Position = UDim2.new(0,15,0,y)
-	label.Size = UDim2.new(1,-30,0,20)
-	label.BackgroundTransparency = 1
-	label.Text = text..": "..default
-	label.TextColor3 = Color3.fromRGB(200,200,200)
-	label.Font = Enum.Font.Gotham
-	label.TextSize = 14
-	label.TextXAlignment = Left
-
-	local bar = Instance.new("Frame", main)
-	bar.Position = UDim2.new(0,15,0,y+25)
-	bar.Size = UDim2.new(1,-30,0,6)
-	bar.BackgroundColor3 = Color3.fromRGB(40,40,40)
-	bar.BorderSizePixel = 0
-	Instance.new("UICorner", bar).CornerRadius = UDim.new(1,0)
-
-	local fill = Instance.new("Frame", bar)
-	fill.Size = UDim2.new((default-min)/(max-min),0,1,0)
-	fill.BackgroundColor3 = Color3.fromRGB(120,120,255)
-	fill.BorderSizePixel = 0
-	Instance.new("UICorner", fill).CornerRadius = UDim.new(1,0)
-
-	bar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			local move; move = UIS.InputChanged:Connect(function(i)
-				if i.UserInputType == Enum.UserInputType.MouseMovement then
-					local scale = math.clamp((i.Position.X - bar.AbsolutePosition.X)/bar.AbsoluteSize.X,0,1)
-					fill.Size = UDim2.new(scale,0,1,0)
-					local value = math.floor(min + (max-min)*scale)
-					label.Text = text..": "..value
-					callback(value)
-				end
-			end)
-			UIS.InputEnded:Wait()
-			move:Disconnect()
-		end
-	end)
+----------------------------------------------------
+-- Ẩn tên
+----------------------------------------------------
+local function hideName(name)
+	local visible = math.max(3, math.floor(#name * 0.5))
+	return string.sub(name,1,visible) .. string.rep("*", #name-visible)
 end
 
--- Sliders
-createSlider("Speed", 50, 16, 200, 16, function(v)
-	humanoid.WalkSpeed = v
+----------------------------------------------------
+-- GUI
+----------------------------------------------------
+local gui = Instance.new("ScreenGui", player.PlayerGui)
+gui.ResetOnSpawn = false
+
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0,500,0,250)
+main.Position = UDim2.new(0.5,-250,0.3,0)
+main.BackgroundColor3 = Color3.fromRGB(30,30,30)
+main.Active = true
+main.BorderSizePixel = 0
+
+local corner = Instance.new("UICorner", main)
+corner.CornerRadius = UDim.new(0,15)
+
+----------------------------------------------------
+-- Kéo mượt
+----------------------------------------------------
+local dragging, dragInput, dragStart, startPos
+
+main.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = main.Position
+		
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
 end)
 
-createSlider("Jump", 100, 50, 250, 50, function(v)
-	humanoid.JumpPower = v
+main.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then
+		dragInput = input
+	end
 end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - dragStart
+		main.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+----------------------------------------------------
+-- Header
+----------------------------------------------------
+local header = Instance.new("TextLabel", main)
+header.Size = UDim2.new(1,0,0,40)
+header.BackgroundTransparency = 1
+header.Text = "👤 Tên: "..hideName(player.Name)
+header.TextColor3 = Color3.new(1,1,1)
+header.TextScaled = true
+header.Font = Enum.Font.GothamBold
+
+----------------------------------------------------
+-- TAB BUTTONS
+----------------------------------------------------
+local tabs = Instance.new("Frame", main)
+tabs.Size = UDim2.new(1,0,0,40)
+tabs.Position = UDim2.new(0,0,0,40)
+tabs.BackgroundTransparency = 1
+
+local function makeTab(text, pos)
+	local btn = Instance.new("TextButton", tabs)
+	btn.Size = UDim2.new(0.33,0,1,0)
+	btn.Position = UDim2.new(pos,0,0,0)
+	btn.Text = text
+	btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextScaled = true
+	return btn
+end
+
+local noteTab = makeTab("Note",0)
+local statusTab = makeTab("Status",0.33)
+local settingTab = makeTab("Setting",0.66)
+
+----------------------------------------------------
+-- CONTENT FRAMES
+----------------------------------------------------
+local content = Instance.new("Frame", main)
+content.Size = UDim2.new(1,0,1,-80)
+content.Position = UDim2.new(0,0,0,80)
+content.BackgroundTransparency = 1
+
+local noteFrame = Instance.new("Frame", content)
+noteFrame.Size = UDim2.new(1,0,1,0)
+noteFrame.BackgroundTransparency = 1
+
+local statusFrame = noteFrame:Clone()
+statusFrame.Parent = content
+statusFrame.Visible = false
+
+local settingFrame = noteFrame:Clone()
+settingFrame.Parent = content
+settingFrame.Visible = false
+
+----------------------------------------------------
+-- NOTE
+----------------------------------------------------
+local jobBox = Instance.new("TextBox", noteFrame)
+jobBox.Size = UDim2.new(0.9,0,0.5,0)
+jobBox.Position = UDim2.new(0.05,0,0.2,0)
+jobBox.PlaceholderText = "Ghi đơn vào đây..."
+jobBox.TextScaled = true
+jobBox.BackgroundColor3 = Color3.fromRGB(45,45,45)
+jobBox.TextColor3 = Color3.new(1,1,1)
+jobBox.ClearTextOnFocus = false
+
+local saveEnabled = false
+
+jobBox.FocusLost:Connect(function(enter)
+	if enter and saveEnabled then
+		remote:FireServer(jobBox.Text)
+	end
+end)
+
+remote.OnClientEvent:Connect(function(data)
+	jobBox.Text = data
+end)
+
+----------------------------------------------------
+-- STATUS
+----------------------------------------------------
+local playerCount = Instance.new("TextLabel", statusFrame)
+playerCount.Size = UDim2.new(1,0,0.5,0)
+playerCount.BackgroundTransparency = 1
+playerCount.TextScaled = true
+playerCount.TextColor3 = Color3.new(1,1,1)
+playerCount.Font = Enum.Font.GothamBold
+
+local function updateCount()
+	playerCount.Text = "Players in server: "..#Players:GetPlayers()
+end
+
+Players.PlayerAdded:Connect(updateCount)
+Players.PlayerRemoving:Connect(updateCount)
+updateCount()
+
+----------------------------------------------------
+-- SETTING
+----------------------------------------------------
+local saveToggle = Instance.new("TextButton", settingFrame)
+saveToggle.Size = UDim2.new(0.8,0,0.3,0)
+saveToggle.Position = UDim2.new(0.1,0,0.1,0)
+saveToggle.Text = "Save Text: OFF"
+saveToggle.BackgroundColor3 = Color3.fromRGB(120,0,0)
+saveToggle.TextColor3 = Color3.new(1,1,1)
+saveToggle.Font = Enum.Font.GothamBold
+saveToggle.TextScaled = true
+
+saveToggle.MouseButton1Click:Connect(function()
+	saveEnabled = not saveEnabled
+	if saveEnabled then
+		saveToggle.Text = "Save Text: ON"
+		saveToggle.BackgroundColor3 = Color3.fromRGB(0,120,0)
+	else
+		saveToggle.Text = "Save Text: OFF"
+		saveToggle.BackgroundColor3 = Color3.fromRGB(120,0,0)
+	end
+end)
+
+-- FPS
+local fpsLabel = Instance.new("TextLabel", settingFrame)
+fpsLabel.Size = UDim2.new(1,0,0.3,0)
+fpsLabel.Position = UDim2.new(0,0,0.5,0)
+fpsLabel.BackgroundTransparency = 1
+fpsLabel.TextColor3 = Color3.new(1,1,1)
+fpsLabel.TextScaled = true
+fpsLabel.Font = Enum.Font.GothamBold
+
+local fpsOn = false
+local last = tick()
+local frames = 0
+
+RunService.RenderStepped:Connect(function()
+	frames += 1
+	if tick() - last >= 1 then
+		if fpsOn then
+			fpsLabel.Text = "FPS: "..frames
+		else
+			fpsLabel.Text = ""
+		end
+		frames = 0
+		last = tick()
+	end
+end)
+
+local fpsToggle = Instance.new("TextButton", settingFrame)
+fpsToggle.Size = UDim2.new(0.8,0,0.3,0)
+fpsToggle.Position = UDim2.new(0.1,0,0.8,0)
+fpsToggle.Text = "FPS: OFF"
+fpsToggle.BackgroundColor3 = Color3.fromRGB(120,0,0)
+fpsToggle.TextColor3 = Color3.new(1,1,1)
+fpsToggle.Font = Enum.Font.GothamBold
+fpsToggle.TextScaled = true
+
+fpsToggle.MouseButton1Click:Connect(function()
+	fpsOn = not fpsOn
+	if fpsOn then
+		fpsToggle.Text = "FPS: ON"
+		fpsToggle.BackgroundColor3 = Color3.fromRGB(0,120,0)
+	else
+		fpsToggle.Text = "FPS: OFF"
+		fpsToggle.BackgroundColor3 = Color3.fromRGB(120,0,0)
+	end
+end)
+
+----------------------------------------------------
+-- TAB SWITCH
+----------------------------------------------------
+local function switch(tab)
+	noteFrame.Visible = false
+	statusFrame.Visible = false
+	settingFrame.Visible = false
+	tab.Visible = true
+end
+
+noteTab.MouseButton1Click:Connect(function() switch(noteFrame) end)
+statusTab.MouseButton1Click:Connect(function() switch(statusFrame) end)
+settingTab.MouseButton1Click:Connect(function() switch(settingFrame) end)
